@@ -1,0 +1,5 @@
+C:\Users\Ivan\source\repos\CompilerUI\CompilerUI\obj\Debug\CompilerUI.csprojResolveAssemblyReference.cache
+C:\Users\Ivan\source\repos\CompilerUI\CompilerUI\obj\Debug\CompilerUI.Form1.resources
+C:\Users\Ivan\source\repos\CompilerUI\CompilerUI\obj\Debug\CompilerUI.Properties.Resources.resources
+C:\Users\Ivan\source\repos\CompilerUI\CompilerUI\obj\Debug\CompilerUI.csproj.GenerateResource.Cache
+C:\Users\Ivan\source\repos\CompilerUI\CompilerUI\obj\Debug\CompilerUI.csproj.CoreCompileInputs.cache
