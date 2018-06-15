@@ -46,13 +46,6 @@ bool LexicoModule::parseSourceCode(const char* src)
 				m_state = LEX_STATE::PARSING_STRING;
 				currChar++;
 			}
-			else if ("is KEYWORD")
-			{
-				tokenBuffer.clear();
-				tokenBuffer.append(currChar, 1);
-				m_state = LEX_STATE::PARSING_KEYWORD;
-				currChar++;
-			}
 			else if (*currChar == '<' || *currChar == '>' ||  *currChar == '=' || *currChar == '!')
 			{
 				tokenBuffer.clear();
@@ -81,13 +74,14 @@ bool LexicoModule::parseSourceCode(const char* src)
 				m_state = LEX_STATE::PARSING_NEGATION_OP;
 				currChar++;
 			}
-			else if (*currChar == '&&' || *currChar == '||' || *currChar == '!')
+			else if (*currChar == '[' || *currChar == '{' || *currChar == '(')
 			{
 				tokenBuffer.clear();
 				tokenBuffer.append(currChar, 1);
-				m_state = LEX_STATE::PARSING_LOGICAL_OP;
+				m_state = LEX_STATE::PARSING_GROUPING;
 				currChar++;
 			}
+
 			/*
 			.
 			.
@@ -161,10 +155,7 @@ bool LexicoModule::parseSourceCode(const char* src)
 				tokenBuffer.append(currChar, 1);
 				currChar++;
 			}
-			else
-			{
-				addToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-			}
+
 			m_state = LEX_STATE::START;
 		}
 		break;
@@ -176,10 +167,7 @@ bool LexicoModule::parseSourceCode(const char* src)
 				tokenBuffer.append(currChar, 1);
 				currChar++;
 			}
-			else
-			{
-				addToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-			}
+
 			m_state = LEX_STATE::START;
 		}
 		break;
@@ -193,21 +181,28 @@ bool LexicoModule::parseSourceCode(const char* src)
 				m_state = LEX_STATE::PARSING_ARTIHMETIC_OP;
 				currChar++;
 			}
+			if (*currChar == ' ')
+			{
+				if (*tokenBuffer.back == "=")
+				{
+					tokenBuffer.clear();
+					tokenBuffer.append(currChar, 1);
+					m_state = LEX_STATE::PARSING_ASSIGN;
+					currChar++;
+				}
+				else
+				{
+
+				}
+			}
 			else if (*currChar == '&&' || *currChar == '||' || *currChar == '!')
 			{
 				tokenBuffer.clear();
 				tokenBuffer.append(currChar, 1);
 				m_state = LEX_STATE::PARSING_LOGICAL_OP;
 				currChar++;
-			})
-			{
-				tokenBuffer.append(currChar, 1);
-				currChar++;
 			}
-			else
-			{
-				addToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-			}
+
 			m_state = LEX_STATE::START;
 		}
 		break;

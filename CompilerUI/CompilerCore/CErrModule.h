@@ -19,7 +19,9 @@ namespace compilerCore
 		CErrModule();
 		~CErrModule();
 
-		void  addError(ERROR_PHASE p, int lineNum, String^desc, String^ line);
+		void AddError(ERROR_PHASE p, int lineNum, String^desc, String^ line);
+		int ReturnNumError();
+		cli::array<String^>^ ReturnErrorString();
 	};
 }
 
