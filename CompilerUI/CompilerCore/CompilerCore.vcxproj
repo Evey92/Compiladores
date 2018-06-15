@@ -135,15 +135,20 @@
   <ItemGroup>
     <ClInclude Include="CErrModule.h" />
     <ClInclude Include="CompilerCore.h" />
+    <ClInclude Include="CSymbolTable.h" />
+    <ClInclude Include="CSyntaxModule.h" />
     <ClInclude Include="CToken.h" />
     <ClInclude Include="LexicoModule.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />
+    <ClInclude Include="Symbol.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="CErrModule.cpp" />
     <ClCompile Include="CompilerCore.cpp" />
+    <ClCompile Include="CSymbolTable.cpp" />
+    <ClCompile Include="CSyntaxModule.cpp" />
     <ClCompile Include="CToken.cpp" />
     <ClCompile Include="LexicoModule.cpp" />
     <ClCompile Include="Stdafx.cpp">
@@ -152,6 +157,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Symbol.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
