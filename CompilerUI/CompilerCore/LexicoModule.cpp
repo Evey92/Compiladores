@@ -1,8 +1,9 @@
 #include "stdafx.h"
 #include "LexicoModule.h"
 
-using namespace compilerCore;
+using namespace CompilerCore;
 
+<<<<<<< HEAD
 LexicoModule::LexicoModule(CErrModule^ err)
 {
 	m_err = err;
@@ -221,103 +222,9 @@ bool LexicoModule::parseSourceCode(const char* src)
 			m_state = LEX_STATE::START;
 		}
 		break;
+=======
+>>>>>>> c7c184cd20411e615a44c53d26209cf854d91b4b
 
-		case LEX_STATE::PARSING_LOGICAL_OP:
-		{
-			if (isdigit(*currChar))
-			{
-				tokenBuffer.append(currChar, 1);
-				currChar++;
-			}
-			else
-			{
-				addToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-			}
-			m_state = LEX_STATE::START;
-		}
-		break;
-
-		case LEX_STATE::PARSING_NEGATION_OP:
-		{
-			if (isdigit(*currChar))
-			{
-				tokenBuffer.append(currChar, 1);
-				currChar++;
-			}
-			else
-			{
-				addToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-			}
-			m_state = LEX_STATE::START;
-		}
-		break;
-
-		case LEX_STATE::PARSING_SEPARATOR:
-		{
-			if (isdigit(*currChar))
-			{
-				tokenBuffer.append(currChar, 1);
-				currChar++;
-			}
-			else
-			{
-				addToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-			}
-			m_state = LEX_STATE::START;
-		}
-		break;
-
-		case LEX_STATE::PARSING_ASSIGN:
-		{
-			if (isdigit(*currChar))
-			{
-				tokenBuffer.append(currChar, 1);
-				currChar++;
-			}
-			else
-			{
-				addToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-			}
-			m_state = LEX_STATE::START;
-		}
-		break;
-
-		case LEX_STATE::PARSING_DIMENSIONAL:
-		{
-			if (isdigit(*currChar))
-			{
-				tokenBuffer.append(currChar, 1);
-				currChar++;
-			}
-			else
-			{
-				addToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-			}
-			m_state = LEX_STATE::START;
-		}
-		break;
-
-		case LEX_STATE::PARSING_GROUPING:
-		{
-			if (isdigit(*currChar))
-			{
-				tokenBuffer.append(currChar, 1);
-				currChar++;
-			}
-			else
-			{
-				addToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-			}
-			m_state = LEX_STATE::START;
-		}
-		break;
-
-
-		}
-	}
-
-	//return (numErrors == 0);
-}
 
 void LexicoModule::addToken(std::string lex, TOKEN_TYPE type, int line)
 {

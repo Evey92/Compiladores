@@ -33,6 +33,15 @@
     <ClInclude Include="CErrModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CSyntaxModule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CSymbolTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CompilerCore.cpp">
@@ -51,6 +60,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CErrModule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CSyntaxModule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CSymbolTable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
