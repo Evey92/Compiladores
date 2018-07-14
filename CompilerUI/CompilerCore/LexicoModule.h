@@ -47,6 +47,7 @@ namespace CompilerCore
 		int GetTotalTokens();
 		int GetTokenIterator();
 		const CToken* const GetActualToken();
+		void SetTokenIterator(int at);
 		const CToken* const PeekTokenAt(int offset);		
 		const CToken* const PeekNextToken();
 		void LexAddError(int lineNum, char* desc , const char* line);
@@ -115,6 +116,11 @@ namespace CompilerCore
 	const CToken* const  LexicoModule::GetActualToken()
 	{
 		return m_Tokens[tokenIterator];
+	}
+
+	void LexicoModule::SetTokenIterator(int at)
+	{
+		tokenIterator = at;
 	}
 
 	const CToken* const LexicoModule::PeekTokenAt(int offset)

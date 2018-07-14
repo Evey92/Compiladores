@@ -33,11 +33,18 @@ namespace CompilerCore
 		
 		Symbol();
 		~Symbol();
+
+		void Clear();
 	};
 
 	Symbol::Symbol()
 	{
 		Symbol* localNode = nullptr;
+	}
+
+	void Symbol::Clear()
+	{
+		
 	}
 
 }
