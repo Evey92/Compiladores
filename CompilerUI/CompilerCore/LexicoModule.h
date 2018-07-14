@@ -26,6 +26,7 @@ namespace CompilerCore
 		PARSING_ASSIGN,
 		PARSING_DIMENSIONAL,
 		PARSING_GROUPING,
+		PARSING_COMMENT,
 	};
 
 	public class LexicoModule
@@ -43,10 +44,14 @@ namespace CompilerCore
 		void Clear();
 		void AddToken(string tokenBufer, TOKEN_TYPE p, int currentLineNum);
 		const CToken* const GetNextToken();
-		const CToken* const PeekTokenAt(int offset);		
-		void LexAddError(int lineNum, char* desc , const char* line);
 		int GetTotalTokens();
+		int GetTokenIterator();
+		const CToken* const GetActualToken();
+		const CToken* const PeekTokenAt(int offset);		
+		const CToken* const PeekNextToken();
+		void LexAddError(int lineNum, char* desc , const char* line);
 		void ClearToken();
+		void ResetTokenCounter();
 		bool ParseSourceCode(const char* src);
 		LEX_STATE m_state;
 	};
@@ -97,9 +102,29 @@ namespace CompilerCore
 		return m_Tokens[tokenIterator];
 	}
 
+	int LexicoModule::GetTotalTokens()
+	{
+		return m_Tokens.size();
+	}
+
+	int LexicoModule::GetTokenIterator()
+	{
+		return tokenIterator;
+	}
+
+	const CToken* const  LexicoModule::GetActualToken()
+	{
+		return m_Tokens[tokenIterator];
+	}
+
 	const CToken* const LexicoModule::PeekTokenAt(int offset)
 	{
 		return m_Tokens[offset];
+	}
+
+	const CToken* const LexicoModule::PeekNextToken()
+	{
+		return m_Tokens[tokenIterator + 1];
 	}
 
 	void LexicoModule::LexAddError(int line_num, char* desc, const char* line)
@@ -109,14 +134,15 @@ namespace CompilerCore
 		m_err->AddError(ERROR_PHASE::LEXICO, line_num, strDesc, strLine);
 	}
 
-	int LexicoModule::GetTotalTokens()
-	{
-		return m_Tokens.size();
-	}
-
+	
 	void LexicoModule::ClearToken()
 	{
 		m_Tokens.clear();
+	}
+
+	void LexicoModule::ResetTokenCounter()
+	{
+		tokenIterator = -1;
 	}
 
 	bool LexicoModule::ParseSourceCode(const char* src)
@@ -126,7 +152,7 @@ namespace CompilerCore
 		const char* currLine = src;
 		int errorPosition = -1;
 		char errorBuffer[1000];
-		bool iscommentary = false, isstring = false;
+		bool isComment = false, isString = false;
 		int ended = 2;
 		int iCurrentLine = 1;
 
@@ -134,299 +160,337 @@ namespace CompilerCore
 		m_state = LEX_STATE::START;
 		ClearToken();
 
-		while (*currChar != '\0')
+		memset(errorBuffer, 0, sizeof(errorBuffer));
+		while (ended>0 && m_err->ReturnNumErrors <= m_err->ReturnMaxErrors())
 		{
 			switch (m_state)
 			{
-			case LEX_STATE::START:
-				if (isalpha(*currChar) || *currChar == ' ')
-				{
-					tokenBuffer.clear();
-					tokenBuffer.append(currChar, 1);
-					m_state = LEX_STATE::PARSING_ID;
-					currChar++;
-				}
-				else if (isdigit(*currChar))
-				{
-					tokenBuffer.clear();
-					tokenBuffer.append(currChar, 1);
-					m_state = LEX_STATE::PARSING_INT;
-					currChar++;
-				}
-				else if ("is STRING")
-				{
-					tokenBuffer.clear();
-					tokenBuffer.append(currChar, 1);
-					m_state = LEX_STATE::PARSING_STRING;
-					currChar++;
-				}
-				else if ("is KEYWORD")
-				{
-					tokenBuffer.clear();
-					tokenBuffer.append(currChar, 1);
-					m_state = LEX_STATE::PARSING_KEYWORD;
-					currChar++;
-				}
-				else if (*currChar == '<' || *currChar == '>' || *currChar == '=' || *currChar == '!')
-				{
-					tokenBuffer.clear();
-					tokenBuffer.append(currChar, 1);
-					m_state = LEX_STATE::PARSING_RELATIONAL_OP;
-					currChar++;
-				}
-				else if (*currChar == '+' || *currChar == '-' || *currChar == '*' || *currChar == '/' || *currChar == '^' || *currChar == '%')
-				{
-					tokenBuffer.clear();
-					tokenBuffer.append(currChar, 1);
-					m_state = LEX_STATE::PARSING_ARTIHMETIC_OP;
-					currChar++;
-				}
-				else if (*currChar == '&' || *currChar == '|' || *currChar == '!')
-				{
-					tokenBuffer.clear();
-					tokenBuffer.append(currChar, 1);
-					m_state = LEX_STATE::PARSING_LOGICAL_OP;
-					currChar++;
-				}
-				else if (*currChar == '!' || *currChar == '-' || *currChar == '*' || *currChar == '/' || *currChar == '^' || *currChar == '%')
-				{
-					tokenBuffer.clear();
-					tokenBuffer.append(currChar, 1);
-					m_state = LEX_STATE::PARSING_NEGATION_OP;
-					currChar++;
-				}
-				else if (*currChar == '&' || *currChar == '|' || *currChar == '!')
-				{
-					tokenBuffer.clear();
-					tokenBuffer.append(currChar, 1);
-					m_state = LEX_STATE::PARSING_LOGICAL_OP;
-					currChar++;
-				}
-				/*
-				.
-				.
-				.
-				*/
-				else
-				{
-					//agrega error
-				}
-				break;
-			case LEX_STATE::PARSING_ID:
-			{
-				if (isalpha(*currChar || *currChar == ' ' || isdigit(*currChar)))
-				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
-				}
-				else
-				{
-					if (m_KeyWordMap.find(tokenBuffer) != m_KeyWordMap.end())
+				case LEX_STATE::START:
+					if (isalpha(*currChar) || *currChar == ' ')
 					{
-						AddToken(tokenBuffer, TOKEN_TYPE::KEYWORD, currentLineNum);
+						tokenBuffer.clear();
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+						m_state = LEX_STATE::PARSING_ID;
+					}
+					else if (isdigit(*currChar))
+					{
+						tokenBuffer.clear();
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+						m_state = LEX_STATE::PARSING_INT;
+
+					}
+					else if (*currChar == 34)
+					{
+						tokenBuffer.clear();
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+						isString = true;
+						m_state = LEX_STATE::PARSING_STRING;
+					}
+				
+					else if (*currChar == '<' || *currChar == '>' || *currChar == '=' || *currChar == '!')
+					{
+						tokenBuffer.clear();
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+						m_state = LEX_STATE::PARSING_RELATIONAL_OP;
+					}
+					else if (*currChar == '+' || *currChar == '-' || *currChar == '*' || *currChar == '/' || *currChar == '^' || *currChar == '%')
+					{
+						tokenBuffer.clear();
+						tokenBuffer.append(currChar, 1);
+						m_state = LEX_STATE::PARSING_ARTIHMETIC_OP;
+						currChar++;
+					}
+					else if (*currChar == '&' || *currChar == '|')
+					{
+						tokenBuffer.clear();
+						tokenBuffer.append(currChar, 1);
+						m_state = LEX_STATE::PARSING_LOGICAL_OP;
+						currChar++;
+					}
+					else if (*currChar == '(' || *currChar == ')' || *currChar == '{' || *currChar == '}' || *currChar == '[' || *currChar == ']')
+					{
+						tokenBuffer.clear();
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+						m_state = LEX_STATE::PARSING_GROUPING;
+					}
+					else if (*currChar == ':' || *currChar == ',' || *currChar == ';')
+					{
+						tokenBuffer.clear();
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+						m_state = LEX_STATE::PARSING_SEPARATOR;
+					}
+					else if (*currChar == '.')
+					{
+						tokenBuffer.clear();
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+						m_state = LEX_STATE::PARSING_FLOAT;
+					}
+					else if (*currChar == 9)
+					{
+						currChar++;
+					}
+					else if (*currChar == '\n')
+					{
+						currChar++;
+						iCurrentLine++;
+						currLine = currChar;
+					}
+					else if (*currChar == 32)
+					{
+						currChar++;
 					}
 					else
 					{
-						AddToken(tokenBuffer, TOKEN_TYPE::ID, currentLineNum);
+						errorPosition = currChar - currLine;
+						memcpy(errorBuffer, currLine, errorPosition);
+						errorBuffer[errorPosition] = '\0';
+						LexAddError(iCurrentLine, "Carácter inválido ", errorBuffer);
+						currChar++;
+					}
+					break;
+				case LEX_STATE::PARSING_ID:
+				{
+					if (isalpha(*currChar || *currChar == ' ' || isdigit(*currChar)))
+					{
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+					}
+					else
+					{
+						if (m_KeyWordMap.find(tokenBuffer) != m_KeyWordMap.end())
+						{
+							AddToken(tokenBuffer, TOKEN_TYPE::KEYWORD, currentLineNum);
+						}
+						else
+						{
+							AddToken(tokenBuffer, TOKEN_TYPE::ID, currentLineNum);
+						}
+						m_state = LEX_STATE::START;
+					}
+					break;
+				}
+				case LEX_STATE::PARSING_INT:
+				{
+					if (isdigit(*currChar))
+					{
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+					}
+					if (*currChar == '.')
+					{
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+						LEX_STATE::PARSING_FLOAT;
+					}
+					else
+					{
+						AddToken(tokenBuffer, TOKEN_TYPE::INT, currentLineNum);
 					}
 					m_state = LEX_STATE::START;
 				}
 				break;
-			}
-			case LEX_STATE::PARSING_INT:
-			{
-				if (isdigit(*currChar))
+				case LEX_STATE::PARSING_FLOAT:
 				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
-				}
-				if (*currChar == '.')
-				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
-					LEX_STATE::PARSING_FLOAT;
-				}
-				else
-				{
-					AddToken(tokenBuffer, TOKEN_TYPE::INT, currentLineNum);
-				}
-				m_state = LEX_STATE::START;
-			}
-			break;
-			case LEX_STATE::PARSING_FLOAT:
-			{
-				if (isdigit(*currChar))
-				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
-				}
-				else
-				{
-					AddToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-				}
-				m_state = LEX_STATE::START;
-			}
-			break;
+					if (isdigit(*currChar))
+					{
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+					}
+					else if (tokenBuffer.back() == '.')
+					{
+						//We throw an error here because it means we have a 5.a or 5.# or some shit like that
+						currChar++;
+						errorPosition = currChar - currLine;
+						memcpy(errorBuffer, currLine, errorPosition);
+						errorBuffer[errorPosition] = '\0';
+						LexAddError(iCurrentLine, "ERROR: Hay dos puntos en este numero", errorBuffer);
+						m_state = LEX_STATE::START;
+					}
+					else
+					{
+						AddToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
+						m_state = LEX_STATE::START;
 
-			case LEX_STATE::PARSING_STRING:
-			{
-				if (isdigit(*currChar))
-				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
+					}
 				}
-				else
-				{
-					AddToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-				}
-				m_state = LEX_STATE::START;
-			}
-			break;
+				break;
 
-			case LEX_STATE::PARSING_KEYWORD:
-			{
-				if (isdigit(*currChar))
+				case LEX_STATE::PARSING_STRING:
 				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
+					if (*currChar != 34 && *currChar != '\r')
+					{
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+					}
+					else if (*currChar == '\r')
+					{
+						if (isString)
+						{
+							errorPosition = currChar - currLine;
+							memcpy(errorBuffer, currLine, errorPosition);
+							errorBuffer[errorPosition] = '\0';
+							LexAddError(iCurrentLine, "ERROR: Hubo un salto de línea sin cerrar comillas de un comentario.", errorBuffer);
+							currChar++;
+							currChar++;
+							iCurrentLine++;
+							currLine = currChar;
+							m_state = LEX_STATE::START;
+						}
+					}
+					else if (*currChar == 34 && isString)
+					{
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+						isString = false;
+						AddToken(tokenBuffer, TOKEN_TYPE::STRING, iCurrentLine);
+						m_state = LEX_STATE::START;
+						tokenBuffer.clear();
+					}
 				}
-				else
-				{
-					AddToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-				}
-				m_state = LEX_STATE::START;
-			}
-			break;
+				break;
 
-			case LEX_STATE::PARSING_RELATIONAL_OP:
-			{
-				if (*currChar == '=')
+				case LEX_STATE::PARSING_RELATIONAL_OP:
 				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
-					AddToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
+					if (*currChar == '=')
+					{
+						if(tokenBuffer.back() == '>' || tokenBuffer.back() == '<' || tokenBuffer.back() == '=' || tokenBuffer.back() == '!')
+						{
+							tokenBuffer.append(currChar, 1);
+							currChar++;
+							AddToken(tokenBuffer, TOKEN_TYPE::RELATIONAL_OP, currentLineNum);
+							m_state = LEX_STATE::START;
+						}
+						else
+						{
+							AddToken(tokenBuffer, TOKEN_TYPE::ASSIGN, iCurrentLine);
+						}
+					}
+					else if (*currChar == '<' || *currChar == '>' || *currChar == '!')
+					{
+						errorPosition = currChar - currLine;
+						memcpy(errorBuffer, currLine, errorPosition);
+						errorBuffer[errorPosition] = '\0';
+						LexAddError(iCurrentLine, "ERROR: Se detetctó <, >, o ! cuando se esperaba =", errorBuffer);
+						m_state = LEX_STATE::START;
+					}
+					else 
+					{
+						if (tokenBuffer.back() == '!')
+						{
+							AddToken(tokenBuffer, TOKEN_TYPE::NEGATION_OP, iCurrentLine);
+						}
+						else
+						{
+							AddToken(tokenBuffer, TOKEN_TYPE::RELATIONAL_OP, iCurrentLine);
+						}
+						m_state = LEX_STATE::START;
+					}
+				}
+				break;
+
+				case LEX_STATE::PARSING_ARTIHMETIC_OP:
+				{
+					if (*currChar == '+' || *currChar == '-')
+					{
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+						AddToken(tokenBuffer, TOKEN_TYPE::ARITHMETIC_OP, iCurrentLine);
+						m_state = LEX_STATE::START;
+					}
+					else if (*currChar == '*' && tokenBuffer.back() == '/' && !isComment)
+					{
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+						isComment = true;
+						m_state = LEX_STATE::PARSING_COMMENT;
+					}
+					else
+					{
+						AddToken(tokenBuffer, TOKEN_TYPE::ARITHMETIC_OP, iCurrentLine);
+						m_state = LEX_STATE::START;
+					}
+				}
+				break;
+
+				case LEX_STATE::PARSING_LOGICAL_OP:
+				{
+					if (*currChar == tokenBuffer.back())
+					{
+						tokenBuffer.append(currChar, 1);
+						currChar++;
+						AddToken(tokenBuffer, TOKEN_TYPE::LOGICAL_OP, iCurrentLine);
+						m_state = LEX_STATE::START;
+					}
+					else
+					{
+						errorPosition = currChar - currLine;
+						memcpy(errorBuffer, currLine, errorPosition);
+						errorBuffer[errorPosition] = '\0';
+
+						if (tokenBuffer.back() == '&')
+						{
+							//Throw error of invalid logical AND operator
+							LexAddError(iCurrentLine, "ERROR: Operador & inválido", errorBuffer);
+						}
+						else if (tokenBuffer.back() == '|')
+						{
+							//Throw error of invalid logical OR operator
+							LexAddError(iCurrentLine, "ERROR: Operador | inválido.", errorBuffer);
+						}
+						m_state = LEX_STATE::START;
+					}
+				}
+				break;
+
+				case LEX_STATE::PARSING_GROUPING:
+				{
+					AddToken(tokenBuffer, TOKEN_TYPE::GROUPING, iCurrentLine);
 					m_state = LEX_STATE::START;
 				}
-				else 
+				break;
+			
+				case LEX_STATE::PARSING_SEPARATOR:
 				{
-					errorPosition = currChar - currLine;
-					memcpy(errorBuffer, currLine, errorPosition);
-					errorBuffer[errorPosition] = '\0';
-					LexAddError(iCurrentLine, "Invalid relational operators m8", cErrorBuffer);
-					m_LexState = LEXIC_STATE::START;
+					if (*currChar != ',' || *currChar != ':' || *currChar != ';' && isalpha(*currChar) || isdigit(*currChar))
+					{
+						AddToken(tokenBuffer, TOKEN_TYPE::SEPARATOR, iCurrentLine);
+						m_state = LEX_STATE::START;
+					}
+					else
+					{
+						errorPosition = currChar - currLine;
+						memcpy(errorBuffer, currLine, errorPosition);
+						errorBuffer[errorPosition] = '\0';
+						LexAddError(iCurrentLine, "ERROR: Operador de separación repetido.", errorBuffer);
+					}
 				}
+				break;
 			}
-			break;
 
-			case LEX_STATE::PARSING_ARTIHMETIC_OP:
+			if (isString)
 			{
-				if (*currChar == '+' || *currChar == '-' && *currChar == tokenBuffer.back())
-				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
-				}
-				else
-				{
-					AddToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-				}
-				m_state = LEX_STATE::START;
+				//We throw an error because the string was never closed
+				errorPosition = currChar - currLine;
+				memcpy(errorBuffer, currLine, errorPosition);
+				errorBuffer[errorPosition] = '\0';
+				LexAddError(iCurrentLine, "ERROR: Faltó cerrar un string con comillas", errorBuffer);
 			}
-			break;
-
-			case LEX_STATE::PARSING_LOGICAL_OP:
+			if (isComment)
 			{
-				if (isdigit(*currChar))
-				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
-				}
-				else
-				{
-					AddToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-				}
-				m_state = LEX_STATE::START;
+				//We throw an error because comment was never closed
+				errorPosition = currChar - currLine;
+				memcpy(errorBuffer, currLine, errorPosition);
+				errorBuffer[errorPosition] = '\0';
+				LexAddError(iCurrentLine, "ERROR: Nunca cerro el comentario con los operadores */", errorBuffer);
 			}
-			break;
-
-			case LEX_STATE::PARSING_NEGATION_OP:
-			{
-				if (isdigit(*currChar))
-				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
-				}
-				else
-				{
-					AddToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-				}
-				m_state = LEX_STATE::START;
-			}
-			break;
-
-			case LEX_STATE::PARSING_SEPARATOR:
-			{
-				if (isdigit(*currChar))
-				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
-				}
-				else
-				{
-					AddToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-				}
-				m_state = LEX_STATE::START;
-			}
-			break;
-
-			case LEX_STATE::PARSING_ASSIGN:
-			{
-				if (isdigit(*currChar))
-				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
-				}
-				else
-				{
-					AddToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-				}
-				m_state = LEX_STATE::START;
-			}
-			break;
-
-			case LEX_STATE::PARSING_DIMENSIONAL:
-			{
-				if (isdigit(*currChar))
-				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
-				}
-				else
-				{
-					AddToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-				}
-				m_state = LEX_STATE::START;
-			}
-			break;
-
-			case LEX_STATE::PARSING_GROUPING:
-			{
-				if (isdigit(*currChar))
-				{
-					tokenBuffer.append(currChar, 1);
-					currChar++;
-				}
-				else
-				{
-					AddToken(tokenBuffer, TOKEN_TYPE::FLOAT, currentLineNum);
-				}
-				m_state = LEX_STATE::START;
-			}
-			break;
-
-
-			}
+			return m_err->ReturnNumErrors() == 0;
 		}
-
-		//return (numErrors == 0);
 	}
 }
