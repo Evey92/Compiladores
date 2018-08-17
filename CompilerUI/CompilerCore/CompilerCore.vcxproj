@@ -134,10 +134,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CErrModule.h" />
+    <ClInclude Include="CExpLog.h" />
+    <ClInclude Include="CLogicExpression.h" />
+    <ClInclude Include="CLogicExpTree.h" />
     <ClInclude Include="CompilerCore.h" />
+    <ClInclude Include="CSemanticModule.h" />
     <ClInclude Include="CSymbolTable.h" />
     <ClInclude Include="CSyntaxModule.h" />
     <ClInclude Include="CToken.h" />
+    <ClInclude Include="CTreeNode.h" />
     <ClInclude Include="LexicoModule.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />
@@ -147,10 +152,15 @@
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="CErrModule.cpp" />
+    <ClCompile Include="CExpLog.cpp" />
+    <ClCompile Include="CLogicExpression.cpp" />
+    <ClCompile Include="CLogicExpTree.cpp" />
     <ClCompile Include="CompilerCore.cpp" />
+    <ClCompile Include="CSemanticModule.cpp" />
     <ClCompile Include="CSymbolTable.cpp" />
     <ClCompile Include="CSyntaxModule.cpp" />
     <ClCompile Include="CToken.cpp" />
+    <ClCompile Include="CTreeNode.cpp" />
     <ClCompile Include="LexicoModule.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

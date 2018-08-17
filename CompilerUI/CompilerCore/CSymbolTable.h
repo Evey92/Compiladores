@@ -14,12 +14,19 @@ namespace CompilerCore
 		std::map<string, Symbol*> m_SymbolHash;
 		std::map<string, Symbol*>::iterator hashIt;
 	public:
-		CSymbolTable();
-		~CSymbolTable();
+		CSymbolTable()
+		{
+
+		}
+		~CSymbolTable()
+		{
+
+		}
 		bool AddSymbol(string sym, SYMBOLCAT cat, int dimension, SYMBOLTYPE symType, int lineNum, string funcName);
 		bool SymbolExists(string sym);
 		bool SymbolExists(string sym, SYMBOLCAT cat);
 		SYMBOLTYPE GetSymbolType(string sym, SYMBOLCAT cat);
+		void Clear();
 	};
 	
 	bool CSymbolTable::AddSymbol(string sym, SYMBOLCAT cat, int dimension, SYMBOLTYPE symType, int lineNum, string funcName)
@@ -93,4 +100,16 @@ namespace CompilerCore
 			}
 		}
 	}
+
+	void CSymbolTable::Clear()
+	{
+		std::string tosearch = m_declaredvariables.find(i)->second;
+		auto it = m_HashTable.find(tosearch);
+		while (it->second->pLocalNode != nullptr)
+		{
+			delete FinalNode(it->second);
+		}
+		delete it->second;
+	}
+
 }
